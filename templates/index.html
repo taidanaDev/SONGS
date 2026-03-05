@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>SongSearch AI</title>
+    <style>
+        body { background-color: #F3F4F4; color: #2C2C2C; }
+        .btn-primary { background-color: #DE1A58; transition: all 0.3s; }
+        .btn-primary:hover { background-color: #FF5A5A; transform: translateY(-2px); }
+        .accent-border { border-color: #DE1A58; }
+        .secondary-bg { background-color: #C9BEFF; }
+        .card-bg { background-color: #FFFFFF; }
+    </style>
+</head>
+
+<body class="font-sans p-4 md:p-8">
+
+    <header class="mb-10 flex justify-between items-center border-b-2 border-[#C9BEFF] pb-5">
+        <div>
+            <h1 class="text-4xl font-black tracking-tight" style="color: #2C2C2C;">
+                SONG<span style="color: #DE1A58;">SEARCH</span> AI
+            </h1>
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Cognate Laboratory v1.0</p>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <div class="space-y-8">
+            <section class="card-bg p-6 rounded-3xl shadow-xl border-t-4 border-[#DE1A58]">
+                <h2 class="text-2xl font-black mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #DE1A58;"></i> Find a Song
+                </h2>
+
+                <form action="/search" method="POST">
+                    <div class="relative mb-5">
+                        <input id="searchBox" name="query" type="text" autocomplete="off"
+                            placeholder="Artist, Song, or Genre..."
+                            class="w-full bg-[#F3F4F4] border-2 border-transparent rounded-2xl py-4 px-6 focus:border-[#C9BEFF] focus:bg-white outline-none font-medium transition-all shadow-inner">
+                        
+                        <div id="suggestions" 
+                            class="absolute bg-white w-full border-2 border-[#C9BEFF] mt-2 rounded-2xl shadow-2xl hidden z-20 overflow-hidden">
+                        </div>
+                    </div>
+
+                    <button class="btn-primary text-white font-black px-10 py-3 rounded-2xl shadow-lg uppercase tracking-wider text-sm">
+                        Search
+                    </button>
+                </form>
+
+                {% if results %}
+                <div class="mt-8 overflow-hidden rounded-2xl border border-gray-100">
+                    <table class="w-full text-left text-sm">
+                        <thead class="secondary-bg">
+                            <tr>
+                                <th class="p-4 font-black">SONG</th>
+                                <th class="p-4 font-black">ARTIST</th>
+                                <th class="p-4 font-black">ALBUM</th>
+                                <th class="p-4 font-black text-center">GENRE</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            {% for row in results %}
+                            <tr class="hover:bg-[#F3F4F4] transition">
+                                <td class="p-4 font-bold">{{ row['Song Title'] }}</td>
+                                <td class="p-4 text-gray-600">{{ row['Name of Artist'] }}</td>
+                                <td class="p-4 text-gray-500 italic">{{ row['Album'] }}</td> <td class="p-4 text-center">
+                                    <span class="secondary-bg px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                        {{ row['Genre'] }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </section>
+
+            <section class="card-bg p-6 rounded-3xl shadow-xl border-t-4 border-[#C9BEFF]">
+                <h2 class="text-2xl font-black mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt" style="color: #DE1A58;"></i> Recommended for You
+                </h2>
+
+                {% if recommendations %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {% for song in recommendations %}
+                    <div class="p-4 rounded-2xl border-2 border-[#F3F4F4] hover:border-[#C9BEFF] transition-all group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 secondary-bg rounded-xl flex items-center justify-center text-[#DE1A58] font-bold">
+                                <i class="fa-solid fa-music"></i>
+                            </div>
+                            <div>
+                                <div class="font-black text-sm group-hover:text-[#DE1A58] transition">{{ song['Song Title'] }}</div>
+                                <div class="text-xs text-gray-500 font-bold uppercase">{{ song['Name of Artist'] }}</div>
+                                <div class="text-xs text-gray-500 font-thin uppercase">{{ song['Genre'] }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-400 italic text-sm text-center py-10">Search for a song to see AI-powered suggestions!</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="space-y-8">
+            <section class="card-bg p-8 rounded-3xl shadow-xl border-2 border-[#DE1A58] relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 secondary-bg -mr-16 -mt-16 rounded-full opacity-50"></div>
+                
+                <h2 class="text-2xl font-black mb-6 relative z-10">Stream Prediction</h2>
+
+                <form action="/predict" method="POST" class="relative z-10">
+                    <div class="space-y-4 mb-8">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Music Genre</label>
+                            <select name="genre" class="w-full bg-[#F3F4F4] rounded-2xl p-4 text-sm border-2 border-transparent focus:border-[#DE1A58] outline-none font-bold">
+                                <option>indie</option>
+                                <option>art-pop</option>
+                                <option>folk rock</option>
+                                <option>alternative rock</option>
+                                <option>r&b</option>
+                                <option>alt-pop</option>
+                                <option>pop</option>
+                                <option>p-pop</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Duration (Sec)</label>
+                                <input name="duration" type="number" placeholder="210" required
+                                    class="w-full bg-[#F3F4F4] rounded-2xl p-4 text-sm border-2 border-transparent focus:border-[#DE1A58] outline-none font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase text-gray-400 ml-2">Release Year</label>
+                                <input name="year" type="number" placeholder="2026" required
+                                    class="w-full bg-[#F3F4F4] rounded-2xl p-4 text-sm border-2 border-transparent focus:border-[#DE1A58] outline-none font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="w-full btn-primary text-white font-black py-4 rounded-2xl shadow-lg uppercase tracking-widest">
+                        Run Prediction Model
+                    </button>
+                </form>
+
+                <div class="mt-8 text-center bg-[#F3F4F4] p-8 rounded-3xl border-2 border-dashed border-[#C9BEFF]">
+                    <p class="text-xs font-black text-[#DE1A58] uppercase tracking-tighter mb-2">Estimated Total Streams</p>
+                    <p class="text-5xl font-black tracking-tighter">
+                        {% if prediction %}
+                            {{ prediction }}
+                        {% else %}
+                            00.0M
+                        {% endif %}
+                    </p>
+                </div>
+            </section>
+
+            <section class="secondary-bg p-6 rounded-3xl">
+                <h3 class="text-sm font-black uppercase mb-4 tracking-widest">Current Dataset</h3>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-white px-3 py-1 rounded-lg text-[10px] font-black">11 ARTISTS</span>
+                    <span class="bg-white px-3 py-1 rounded-lg text-[10px] font-black">100 SONGS</span>
+                    <span class="bg-white px-3 py-1 rounded-lg text-[10px] font-black">8 GENRES</span>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const searchBox = document.getElementById("searchBox");
+        const suggestions = document.getElementById("suggestions");
+
+        searchBox.addEventListener("keyup", async function() {
+            let query = searchBox.value;
+            if (query.length < 2) {
+                suggestions.style.display = "none";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/autocomplete?q=${query}`);
+                const data = await response.json();
+                
+                suggestions.innerHTML = "";
+                // Match the key 'suggestions' from your Python code
+                if (data.suggestions && data.suggestions.length > 0) {
+                    data.suggestions.forEach(item => {
+                        let div = document.createElement("div");
+                        div.className = "p-4 hover:bg-[#C9BEFF] cursor-pointer font-bold border-b border-gray-50 text-sm transition-colors";
+                        div.innerText = item;
+                        div.onclick = () => {
+                            searchBox.value = item;
+                            suggestions.style.display = "none";
+                        };
+                        suggestions.appendChild(div);
+                    });
+                    suggestions.style.display = "block";
+                } else {
+                    suggestions.style.display = "none";
+                }
+            } catch (error) {
+                console.error("Autocomplete error:", error);
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function(e) {
+            if (e.target !== searchBox) suggestions.style.display = "none";
+        });
+    </script>
+</body>
+</html>
